@@ -11,3 +11,5 @@ scikit-image
 joblib
 matplotlib
 scipy
+bottle
+grcpio
