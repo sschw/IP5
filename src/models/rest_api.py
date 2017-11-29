@@ -55,7 +55,7 @@ class Inference:
 
     def _POST(self):
         # REST endpoint for prediction, takes base64 encoded jpg and returns the top 3 predicted classes with class probabilities
-        file_data = base64.b64decode(bottle.request.json['file'])
+        file_data = base64.b64decode(bottle.request.json['image'])
 
         with open('current.jpg', 'wb') as f:
             f.write(file_data)
@@ -66,14 +66,14 @@ class Inference:
 
         # Send request
         answer = self.stub.Predict(self.request, self.request_timeout)
-        result = {'scores': [answer.outputs['scores'].float_val[0],
+        scores = [answer.outputs['scores'].float_val[0],
                              answer.outputs['scores'].float_val[1],
-                             answer.outputs['scores'].float_val[2]],
-                  'classes': [answer.outputs['classes'].string_val[0].decode("utf-8"),
+                             answer.outputs['scores'].float_val[2]]
+        classes = [answer.outputs['classes'].string_val[0].decode("utf-8"),
                              answer.outputs['classes'].string_val[1].decode("utf-8"),
-                             answer.outputs['classes'].string_val[2].decode("utf-8")]}
+                             answer.outputs['classes'].string_val[2].decode("utf-8")]
 
-        return {"success": True, "result": result}
+        return {"scores": scores, "classes": classes}
 
     def new_workpiece_id(self):
         # REST endpoint for getting a new workpiece id
