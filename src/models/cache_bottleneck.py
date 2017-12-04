@@ -21,7 +21,7 @@ from google.protobuf import text_format
 FLAGS = tf.app.flags.FLAGS
 
 # TODO Replace with flags
-BOTTLENECK_TENSOR_NAME = 'local5/local5/local5/sparsity:0'
+BOTTLENECK_TENSOR_NAME = 'local5/local5:0'
 INPUT_TENSOR_NAME = 'map/TensorArrayStack/TensorArrayGatherV3:0'
 
 FLAGS = tf.app.flags.FLAGS
@@ -57,6 +57,7 @@ def convert_bottlenecks_to_tfrecords():
     with tf.Session(graph=tf.Graph()) as sess:
         
         meta = tf.saved_model.loader.load(sess, [tf.saved_model.tag_constants.SERVING], "../../models/1")
+        
         bottleneck_tensor = tf.get_default_graph().get_tensor_by_name(BOTTLENECK_TENSOR_NAME)
         input_tensor = tf.get_default_graph().get_tensor_by_name(INPUT_TENSOR_NAME)
         
@@ -72,6 +73,7 @@ def convert_bottlenecks_to_tfrecords():
                 label_id = int(entry[1])
                 bottleneck_tensor_value = sess.run(bottleneck_tensor, {input_tensor: [sample]})
                 bottleneck_tensor_value = np.squeeze(bottleneck_tensor_value)
+                #print(bottleneck_tensor_value)
                 example = assemble_example(bottleneck_tensor_value, label_id)
                 writer.write(example.SerializeToString())
             writer.close()
