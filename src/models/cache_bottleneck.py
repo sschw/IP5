@@ -57,12 +57,8 @@ def convert_bottlenecks_to_tfrecords():
     with tf.Session(graph=tf.Graph()) as sess:
         
         meta = tf.saved_model.loader.load(sess, [tf.saved_model.tag_constants.SERVING], "../../models/1")
-#        sess.run(tf.global_variables_initializer()) 
-        
-        saver = tf.train.Saver()
-        saver.restore(sess, '../../models/1/variables/variables.index')
-        
-        bottleneck_tensor, input_tensor = tf.import_graph_def(graph_def=meta.graph_def, name="", return_elements=[BOTTLENECK_TENSOR_NAME, INPUT_TENSOR_NAME])
+        bottleneck_tensor = tf.get_default_graph().get_tensor_by_name(BOTTLENECK_TENSOR_NAME)
+        input_tensor = tf.get_default_graph().get_tensor_by_name(INPUT_TENSOR_NAME)
         
         filelist = create_file_list()
         
@@ -73,6 +69,7 @@ def convert_bottlenecks_to_tfrecords():
             
             for entry in filelist[category]:
                 sample = sess.run(read_png(os.path.join(os.pardir, os.pardir, entry[0])))
+                label_id = int(entry[1])
                 bottleneck_tensor_value = sess.run(bottleneck_tensor, {input_tensor: [sample]})
                 bottleneck_tensor_value = np.squeeze(bottleneck_tensor_value)
                 example = assemble_example(bottleneck_tensor_value, label_id)
