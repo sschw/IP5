@@ -53,7 +53,7 @@ class Inference:
     def start(self):
         self._app.run(host=self._host, port=self._port)
 
-    def _POST(self):
+    def _POST(self): #TODO better name...
         # REST endpoint for prediction, takes base64 encoded jpg and returns the top 3 predicted classes with class probabilities
         file_data = base64.b64decode(bottle.request.json['image'])
 
@@ -72,8 +72,14 @@ class Inference:
         classes = [answer.outputs['classes'].string_val[0].decode("utf-8"),
                              answer.outputs['classes'].string_val[1].decode("utf-8"),
                              answer.outputs['classes'].string_val[2].decode("utf-8")]
+	images = []
 
-        return {"scores": scores, "classes": classes}
+	for i in range(0, 3):
+	    f = open('classimages/' + str(classes[i]) + '.PNG', 'rb')
+	    images.append(base64.b64encode(f.read()))
+	    f.close()
+
+        return {"scores": scores, "classes": classes, "images": images}
 
     def new_workpiece_id(self):
         # REST endpoint for getting a new workpiece id
@@ -92,7 +98,7 @@ class Inference:
 	
         image_number = bottle.request.json['imageNumber']
 	image = bottle.request.json['image']
-    	directory = 'new_workpieces/' + str(workpiece_id) + '/'
+    	directory = 'new_workpieces/' + str(workpiece_id) + '/' #TODO configure these folders at the top as constants
     	if not os.path.exists(directory):
 	    os.makedirs(directory)
    	f = open(directory + str(image_number) + '.jpg', 'wb')
