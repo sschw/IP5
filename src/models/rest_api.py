@@ -18,7 +18,8 @@ tf.app.flags.DEFINE_integer("model_version", 1, "TensorFlow model version")
 tf.app.flags.DEFINE_float("request_timeout", 100.0, "Timeout of gRPC request")
 FLAGS = tf.app.flags.FLAGS
 
-
+DIR_NEW_WORKPIECES = 'new_workpieces'
+DIR_WORKPIECE_IDS  = 'workpiece_ids'
 
 
 class Inference:
@@ -42,19 +43,21 @@ class Inference:
 
         self._host = host
         self._port = port
+	bottle.BaseRequest.MEMFILE_MAX = 1000000
         self._app = bottle.Bottle()
         self._route()
 
     def _route(self):
-        self._app.route('/', method="POST", callback=self._POST)
+        self._app.route('/recognize_workpiece', method="POST", callback=self.recognize_workpiece)
         self._app.route('/new_workpiece_id', method="GET", callback=self.new_workpiece_id)
         self._app.route('/add_workpiece_image', method="POST", callback=self.add_workpiece_image)
 
     def start(self):
         self._app.run(host=self._host, port=self._port)
 
-    def _POST(self): #TODO better name...
-        # REST endpoint for prediction, takes base64 encoded jpg and returns the top 3 predicted classes with class probabilities
+    def recognize_workpiece(self):
+        # REST endpoint for prediction, takes base64 encoded jpg and returns the top 3 predicted classes with class probabilities and images
+
         file_data = base64.b64decode(bottle.request.json['image'])
 
         with open('current.jpg', 'wb') as f:
@@ -75,7 +78,7 @@ class Inference:
 	images = []
 
 	for i in range(0, 3):
-	    f = open('classimages/' + str(classes[i]) + '.PNG', 'rb')
+	    f = open(DIR_WORKPIECE_IDS + '/' + str(classes[i]) + '.PNG', 'rb')
 	    images.append(base64.b64encode(f.read()))
 	    f.close()
 
@@ -93,12 +96,10 @@ class Inference:
         # REST endpoint for adding an image for a new workpiece
 	print("adding image for new workpiece")
 	workpiece_id = bottle.request.json['workpieceId']
-	print(bottle.request)
-	print(bottle.request.json)
 	
         image_number = bottle.request.json['imageNumber']
 	image = bottle.request.json['image']
-    	directory = 'new_workpieces/' + str(workpiece_id) + '/' #TODO configure these folders at the top as constants
+    	directory = DIR_NEW_WORKPIECES + '/' + str(workpiece_id) + '/'
     	if not os.path.exists(directory):
 	    os.makedirs(directory)
    	f = open(directory + str(image_number) + '.jpg', 'wb')
