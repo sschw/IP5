@@ -1,0 +1,1 @@
+tensorflow_model_server --port=9000 --model_name=ip5wke --model_base_path=/home/kivy/dev/IP5/models/
