@@ -78,7 +78,9 @@ class Inference:
 	images = []
 
 	for i in range(0, 3):
-	    f = open(DIR_WORKPIECE_IDS + '/' + str(classes[i]) + '.PNG', 'rb')
+	    workpiece_id = str(classes[i])
+	    filename = workpiece_id + (".PNG" if os.path.isfile(DIR_WORKPIECE_IDS + "/" + workpiece_id + ".PNG") else ".jpg")
+	    f = open(DIR_WORKPIECE_IDS + '/' + filename, 'rb')
 	    images.append(base64.b64encode(f.read()))
 	    f.close()
 
@@ -87,7 +89,10 @@ class Inference:
     def new_workpiece_id(self):
         # REST endpoint for getting a new workpiece id
 	print("new workpiece id requested")
-	new_id = randint(1000, 1000000) #TODO: get next free id instead
+	id_files = os.listdir(DIR_WORKPIECE_IDS)
+	ids = map(lambda filename: int(os.path.splitext(filename)[0]), id_files) # files are named <id>.[PNG|JPG]
+	ids = sorted(ids)
+	new_id = ids[-1]+1 # could also use random id: randint(1000, 1000000)
 	print("new workpiece id = " + str(new_id))
 
         return {"workpieceId": new_id}
@@ -102,9 +107,17 @@ class Inference:
     	directory = DIR_NEW_WORKPIECES + '/' + str(workpiece_id) + '/'
     	if not os.path.exists(directory):
 	    os.makedirs(directory)
-   	f = open(directory + str(image_number) + '.jpg', 'wb')
-    	f.write(base64.b64decode(image))
-    	f.close()
+   	with open(directory + str(image_number) + '.jpg', 'wb') as f:
+    	    f.write(base64.b64decode(image))
+    	    f.close()
+
+
+	id_file_name = DIR_WORKPIECE_IDS + '/' + str(workpiece_id) + '.jpg'
+	if not os.path.isfile(id_file_name): # if it is the first file uploaded with this id: also save it as id file.
+	    print("adding " + id_file_name)
+	    with open(id_file_name, 'wb') as id_file:
+	        id_file.write(base64.b64decode(image))
+    	        id_file.close()
 
         return {"workpieceId": workpiece_id}
 
