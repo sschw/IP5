@@ -10,6 +10,7 @@ import prediction_service_pb2
 
 from random import *
 import os
+import subprocess
 
 tf.app.flags.DEFINE_string("host", "127.0.0.1", "gRPC server host")
 tf.app.flags.DEFINE_integer("port", 9000, "gRPC server port")
@@ -20,6 +21,7 @@ FLAGS = tf.app.flags.FLAGS
 
 DIR_NEW_WORKPIECES = 'new_workpieces'
 DIR_WORKPIECE_IDS  = 'workpiece_ids'
+TRANSFER_LEARNING_SCRIPT = './initiate_transfer_learning'
 
 
 class Inference:
@@ -51,6 +53,7 @@ class Inference:
         self._app.route('/recognize_workpiece', method="POST", callback=self.recognize_workpiece)
         self._app.route('/new_workpiece_id', method="GET", callback=self.new_workpiece_id)
         self._app.route('/add_workpiece_image', method="POST", callback=self.add_workpiece_image)
+	self._app.route('/initiate_transfer_learning', method="POST", callback=self.initiate_transfer_learning)
 
     def start(self):
         self._app.run(host=self._host, port=self._port)
@@ -120,6 +123,11 @@ class Inference:
     	        id_file.close()
 
         return {"workpieceId": workpiece_id}
+    
+    def initiate_transfer_learning(self):
+	# REST endpoint to start the transfer learning
+	print("starting script " + TRANSFER_LEARNING_SCRIPT)
+	subprocess.call([TRANSFER_LEARNING_SCRIPT])
 
 
 

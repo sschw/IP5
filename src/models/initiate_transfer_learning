@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "initiating transfer learning..."
+#TODO call the necessary scripts
